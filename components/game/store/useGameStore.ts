@@ -1,41 +1,93 @@
 import { create } from 'zustand';
 
+interface HighScoreEntry {
+  name: string;
+  score: number;
+  stylePoints: number;
+  date: number;
+}
+
 interface BonusEffects {
-  speedBoost: number; // Time remaining in seconds
+  speedBoost: number;
   jumpBoost: number;
   shield: number;
   slowMotion: number;
   magnet: number;
 }
 
-interface GameState {
-  // Game state
+// Safe localStorage functions
+const getStorageItem = (key: string): string | null => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem(key);
+  }
+  return null;
+};
+
+const setStorageItem = (key: string, value: string): void => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(key, value);
+  }
+};
+
+// Initial state values
+const initialState = {
+  score: 0,
+  highScore: 0,
+  highScores: [] as HighScoreEntry[],
+  playerName: '',
+  isGameOver: false,
+  isPlaying: false,
+  speedMultiplier: 1,
+  playerPosition: { x: 0, y: 1, z: 0 },
+  playerVelocity: { x: 0, y: 0, z: 0 },
+  isJumping: false,
+  isSliding: false,
+  canDoubleJump: true,
+  hasDoubleJumped: false,
+  trickJumpActive: false,
+  lastDirection: 'center' as const,
+  bodyLean: 0,
+  jumpStartTime: 0,
+  trickJumpType: 'none' as const,
+  stylePoints: 0,
+  bonusEffects: {
+    speedBoost: 0,
+    jumpBoost: 0,
+    shield: 0,
+    slowMotion: 0,
+    magnet: 0,
+  } as BonusEffects,
+  lastBonusMessage: '',
+} as const;
+
+type GameState = {
+  // State
   score: number;
+  highScore: number;
+  highScores: HighScoreEntry[];
+  playerName: string;
   isGameOver: boolean;
   isPlaying: boolean;
   speedMultiplier: number;
-  
-  // Player state
   playerPosition: { x: number; y: number; z: number };
   playerVelocity: { x: number; y: number; z: number };
   isJumping: boolean;
-  
-  // Enhanced Character States
   isSliding: boolean;
   canDoubleJump: boolean;
   hasDoubleJumped: boolean;
   trickJumpActive: boolean;
   lastDirection: 'left' | 'right' | 'center';
-  bodyLean: number; // -1 to 1, for left/right lean
+  bodyLean: number;
   jumpStartTime: number;
   trickJumpType: 'flip' | 'spin' | 'none';
   stylePoints: number;
-  
-  // Bonus system
   bonusEffects: BonusEffects;
   lastBonusMessage: string;
-  
-  // Game actions
+
+  // Actions
+  setPlayerName: (name: string) => void;
+  saveHighScore: () => void;
+  loadHighScores: () => void;
   incrementScore: () => void;
   addBonusScore: (points: number) => void;
   addStylePoints: (points: number) => void;
@@ -43,13 +95,11 @@ interface GameState {
   resetGame: () => void;
   startGame: () => void;
   updateSpeed: () => void;
-  
-  // Player actions
+  updateHighScore: () => void;
+  loadHighScore: () => void;
   setPlayerPosition: (position: { x: number; y: number; z: number }) => void;
   setPlayerVelocity: (velocity: { x: number; y: number; z: number }) => void;
   setIsJumping: (jumping: boolean) => void;
-  
-  // Enhanced Character Actions
   setIsSliding: (sliding: boolean) => void;
   setDirection: (direction: 'left' | 'right' | 'center') => void;
   updateBodyLean: (deltaTime: number) => void;
@@ -58,49 +108,102 @@ interface GameState {
   startTrickJump: (type: 'flip' | 'spin') => void;
   endTrickJump: () => void;
   resetJumpState: () => void;
-  
-  // Bonus actions
   activateBonus: (type: string, duration: number, value?: number) => void;
   updateBonusEffects: (deltaTime: number) => void;
   getBonusSpeedMultiplier: () => number;
   hasShield: () => boolean;
   hasJumpBoost: () => boolean;
   hasMagneticPull: () => boolean;
-}
+};
+
+// Get initial high scores safely
+const getInitialHighScores = (): HighScoreEntry[] => {
+  try {
+    const savedScores = getStorageItem('highScores');
+    if (savedScores) {
+      return JSON.parse(savedScores);
+    }
+  } catch (error) {
+    console.error('Error loading initial high scores:', error);
+  }
+  return [];
+};
+
+// Get initial high score safely
+const getInitialHighScore = (): number => {
+  try {
+    const savedHighScore = getStorageItem('highScore');
+    if (savedHighScore) {
+      return parseInt(savedHighScore);
+    }
+  } catch (error) {
+    console.error('Error loading initial high score:', error);
+  }
+  return 0;
+};
 
 export const useGameStore = create<GameState>((set, get) => ({
-  // Initial state
-  score: 0,
-  isGameOver: false,
-  isPlaying: false,
-  speedMultiplier: 1,
-  
-  playerPosition: { x: 0, y: 1, z: 0 },
-  playerVelocity: { x: 0, y: 0, z: 0 },
-  isJumping: false,
-  
-  // Enhanced Character States
-  isSliding: false,
-  canDoubleJump: true,
-  hasDoubleJumped: false,
-  trickJumpActive: false,
-  lastDirection: 'center',
-  bodyLean: 0,
-  jumpStartTime: 0,
-  trickJumpType: 'none',
-  stylePoints: 0,
-  
-  // Bonus system
-  bonusEffects: {
-    speedBoost: 0,
-    jumpBoost: 0,
-    shield: 0,
-    slowMotion: 0,
-    magnet: 0,
+  ...initialState,
+
+  setPlayerName: (name) => {
+    set({ playerName: name });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('playerName', name);
+    }
   },
-  lastBonusMessage: '',
-  
-  // Game actions
+
+  saveHighScore: () => {
+    if (typeof window === 'undefined') return;
+
+    const { score, playerName, stylePoints, highScores } = get();
+    
+    if (score > 0 && playerName) {
+      const newEntry: HighScoreEntry = {
+        name: playerName,
+        score,
+        stylePoints,
+        date: Date.now()
+      };
+
+      const updatedScores = [...highScores, newEntry]
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10);
+
+      set({ highScores: updatedScores });
+      localStorage.setItem('highScores', JSON.stringify(updatedScores));
+
+      if (score > get().highScore) {
+        set({ highScore: score });
+        localStorage.setItem('highScore', score.toString());
+      }
+    }
+  },
+
+  loadHighScores: () => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const savedScores = localStorage.getItem('highScores');
+      const savedHighScore = localStorage.getItem('highScore');
+      const savedPlayerName = localStorage.getItem('playerName');
+
+      if (savedScores) {
+        const scores = JSON.parse(savedScores) as HighScoreEntry[];
+        set({ highScores: scores });
+      }
+
+      if (savedHighScore) {
+        set({ highScore: parseInt(savedHighScore) });
+      }
+
+      if (savedPlayerName) {
+        set({ playerName: savedPlayerName });
+      }
+    } catch (error) {
+      console.error('Error loading scores:', error);
+    }
+  },
+
   incrementScore: () => {
     set((state) => ({ score: state.score + 1 }));
     get().updateSpeed();
@@ -115,8 +218,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     set((state) => ({ stylePoints: state.stylePoints + points }));
   },
   
-  setGameOver: () =>
-    set({ isGameOver: true, isPlaying: false }),
+  setGameOver: () => {
+    get().saveHighScore();
+    set({ isGameOver: true, isPlaying: false });
+  },
   
   resetGame: () =>
     set({
@@ -156,7 +261,20 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({ speedMultiplier: newSpeedMultiplier });
   },
   
-  // Player actions
+  updateHighScore: () => {
+    const { score, highScore } = get();
+    if (score > highScore) {
+      set({ highScore: score });
+    }
+  },
+  
+  loadHighScore: () => {
+    const highScore = localStorage.getItem('highScore');
+    if (highScore) {
+      set({ highScore: parseInt(highScore) });
+    }
+  },
+  
   setPlayerPosition: (position) =>
     set({ playerPosition: position }),
   
@@ -166,7 +284,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   setIsJumping: (jumping) =>
     set({ isJumping: jumping }),
   
-  // Enhanced Character Actions
   setIsSliding: (sliding) =>
     set({ isSliding: sliding }),
   
@@ -214,7 +331,6 @@ export const useGameStore = create<GameState>((set, get) => ({
     }));
   },
   
-  // Bonus actions
   activateBonus: (type, duration, value) => {
     const { bonusEffects } = get();
     
@@ -316,4 +432,22 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { bonusEffects } = get();
     return bonusEffects.magnet > 0;
   },
-})); 
+}));
+
+// Initialize high scores from localStorage when store is created
+if (typeof window !== 'undefined') {
+  const savedHighScore = localStorage.getItem('highScore');
+  if (savedHighScore) {
+    useGameStore.setState({ highScore: parseInt(savedHighScore) });
+  }
+  
+  try {
+    const savedScores = localStorage.getItem('highScores');
+    if (savedScores) {
+      const scores = JSON.parse(savedScores) as HighScoreEntry[];
+      useGameStore.setState({ highScores: scores });
+    }
+  } catch (error) {
+    console.error('Error loading initial high scores:', error);
+  }
+} 
