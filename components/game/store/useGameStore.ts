@@ -256,8 +256,12 @@ export const useGameStore = create<GameState>((set, get) => ({
   
   updateSpeed: () => {
     const { score } = get();
-    // Increase speed by 5% every 5 points, capped at 2.5x speed
-    const newSpeedMultiplier = Math.min(1 + (Math.floor(score / 5) * 0.05), 2.5);
+    // More gradual speed increase:
+    // Start at base speed (1.0x)
+    // Increase by 2% every 10 points
+    // Cap at 2.0x speed
+    const speedIncrease = Math.floor(score / 10) * 0.02;
+    const newSpeedMultiplier = Math.min(1 + speedIncrease, 2.0);
     set({ speedMultiplier: newSpeedMultiplier });
   },
   

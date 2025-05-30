@@ -28,10 +28,10 @@ export const Game: React.FC = () => {
       <Canvas 
         shadows 
         camera={{
-          position: [0, 3, -5],
-          fov: 85,
+          position: [0, 2.5, -3.5],
+          fov: 75,
           near: 0.1,
-          far: 300 // Increased far plane to accommodate sky dome
+          far: 300
         }}
         gl={{ 
           antialias: true, 
@@ -39,25 +39,25 @@ export const Game: React.FC = () => {
           powerPreference: "high-performance",
           stencil: false,
           depth: true,
-          logarithmicDepthBuffer: true // Better depth precision
+          logarithmicDepthBuffer: false, // Disabled for performance
         }}
-        dpr={[1, 2]} // Adaptive pixel ratio for performance
+        dpr={[1, 1.5]} // Reduced max DPR for performance
       >
         <Suspense fallback={null}>
-          {/* Enhanced Lighting System */}
-          <ambientLight intensity={0.4} color="#87ceeb" />
+          {/* Optimized Lighting System */}
+          <ambientLight intensity={0.3} color="#b4d4ff" />
           
-          {/* Main directional light (sun) */}
+          {/* Main directional light (sun) - optimized shadows */}
           <directionalLight
             position={[50, 50, 25]}
-            intensity={1.2}
+            intensity={1.4}
             castShadow
-            shadow-mapSize={[4096, 4096]}
-            shadow-camera-far={200}
-            shadow-camera-left={-50}
-            shadow-camera-right={50}
-            shadow-camera-top={50}
-            shadow-camera-bottom={-50}
+            shadow-mapSize={[1024, 1024]} // Reduced for performance
+            shadow-camera-far={150}
+            shadow-camera-left={-30}
+            shadow-camera-right={30}
+            shadow-camera-top={30}
+            shadow-camera-bottom={-30}
             shadow-bias={-0.0001}
             color="#ffeaa7"
           />
@@ -65,22 +65,22 @@ export const Game: React.FC = () => {
           {/* Fill light for softer shadows */}
           <directionalLight
             position={[-20, 20, 10]}
-            intensity={0.3}
-            color="#87ceeb"
+            intensity={0.4}
+            color="#b4d4ff"
           />
           
           {/* Rim lighting for depth */}
           <directionalLight
             position={[0, 10, -30]}
-            intensity={0.4}
+            intensity={0.5}
             color="#ffffff"
           />
 
           {/* Atmospheric fog for depth */}
-          {/* <Fog attach="fog" args={['#87ceeb', 50, 200]} /> */}
+          <fog attach="fog" args={['#b4d4ff', 60, 150]} />
           
           {/* HDRI Environment for realistic reflections */}
-          <DreiEnvironment preset="dawn" background={false} />
+          <DreiEnvironment preset="sunset" background={false} />
 
           {/* Game Components */}
           <Player />
@@ -92,42 +92,28 @@ export const Game: React.FC = () => {
           <ParticleSystem />
           <Camera />
           
-          {/* Post-Processing Effects */}
-          <EffectComposer>
-            {/* Anti-aliasing for smooth edges */}
+          {/* Optimized Post-Processing Effects */}
+          <EffectComposer multisampling={2}>
             <SMAA />
-            
-            {/* Bloom for glowing effects */}
             <Bloom 
-              intensity={0.3}
-              luminanceThreshold={0.9}
+              intensity={0.4}
+              luminanceThreshold={0.7}
               luminanceSmoothing={0.9}
-              height={300}
-              opacity={1}
+              height={200}
+              opacity={0.8}
             />
-            
-            {/* Depth of field for focus effect */}
-            <DepthOfField 
-              focusDistance={0.02}
-              focalLength={0.025}
-              bokehScale={3}
-            />
-            
-            {/* Vignette for cinematic look */}
             <Vignette 
               eskil={false}
-              offset={0.1}
-              darkness={0.5}
+              offset={0.15}
+              darkness={0.4}
             />
-            
-            {/* Tone mapping for realistic lighting */}
             <ToneMapping 
               adaptive={true}
-              resolution={256}
-              middleGrey={0.6}
+              resolution={128}
+              middleGrey={0.4}
               maxLuminance={16}
               averageLuminance={1}
-              adaptationRate={1}
+              adaptationRate={2}
             />
           </EffectComposer>
         </Suspense>

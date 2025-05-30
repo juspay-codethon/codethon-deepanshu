@@ -4,6 +4,7 @@ import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group } from 'three';
 import { useGameStore } from './store/useGameStore';
+import * as THREE from 'three';
 
 const TILE_SIZE = 20;
 const TILE_OVERLAP = 0.8; // Increased overlap for better high-speed coverage
@@ -17,28 +18,40 @@ const SURFACE_TYPES = {
     roughness: 0.9, 
     metalness: 0.0,
     emissive: '#001a00',
-    emissiveIntensity: 0.05
+    emissiveIntensity: 0.05,
+    normalScale: new THREE.Vector2(0.5, 0.5),
+    displacementScale: 0.1,
+    displacementBias: 0
   },
   mud: { 
     color: '#92400e', 
     roughness: 0.95, 
     metalness: 0.0,
     emissive: '#1a0800',
-    emissiveIntensity: 0.02
+    emissiveIntensity: 0.02,
+    normalScale: new THREE.Vector2(1, 1),
+    displacementScale: 0.2,
+    displacementBias: 0
   },
   road: { 
     color: '#374151', 
     roughness: 0.3, 
     metalness: 0.1,
     emissive: '#0a0a0a',
-    emissiveIntensity: 0.01
+    emissiveIntensity: 0.01,
+    normalScale: new THREE.Vector2(0.3, 0.3),
+    displacementScale: 0.05,
+    displacementBias: 0
   },
   highway: { 
     color: '#1f2937', 
     roughness: 0.2, 
     metalness: 0.3,
     emissive: '#0f0f0f',
-    emissiveIntensity: 0.02
+    emissiveIntensity: 0.02,
+    normalScale: new THREE.Vector2(0.2, 0.2),
+    displacementScale: 0.03,
+    displacementBias: 0
   }
 };
 
@@ -53,68 +66,71 @@ const Tile: React.FC<TileProps> = ({ position, surfaceType, tileIndex }) => {
   
   return (
     <group position={position}>
-      {/* Extra wide base layer for complete coverage */}
-      <mesh receiveShadow position={[0, -0.1, 0]}>
-        <boxGeometry args={[TILE_SIZE + 2, 0.2, TILE_SIZE + 2]} />
+      {/* Base layer with displacement */}
+      <mesh receiveShadow position={[0, -0.2, 0]}>
+        <boxGeometry args={[TILE_SIZE + 2, 0.4, TILE_SIZE + 2]} />
         <meshStandardMaterial 
           color={surface.color} 
           roughness={surface.roughness}
           metalness={surface.metalness}
           emissive={surface.emissive}
           emissiveIntensity={surface.emissiveIntensity}
+          displacementScale={surface.displacementScale}
+          displacementBias={surface.displacementBias}
+          normalScale={surface.normalScale}
         />
       </mesh>
       
-      {/* Main ground tile - larger to prevent gaps */}
+      {/* Main ground tile with enhanced detail */}
       <mesh receiveShadow position={[0, 0, 0]}>
-        <boxGeometry args={[TILE_SIZE + 1, 0.4, TILE_SIZE + 1]} />
+        <boxGeometry 
+          args={[TILE_SIZE + 1, 0.2, TILE_SIZE + 1]}
+          onUpdate={geometry => {
+            // Add some vertex displacement for natural variation
+            const positions = geometry.attributes.position.array;
+            for (let i = 0; i < positions.length; i += 3) {
+              if (positions[i + 1] === 0.1) { // Only displace top vertices
+                positions[i] += (Math.random() - 0.5) * 0.1;
+                positions[i + 1] += (Math.random() - 0.5) * 0.05;
+                positions[i + 2] += (Math.random() - 0.5) * 0.1;
+              }
+            }
+            geometry.computeVertexNormals();
+          }}
+        />
         <meshStandardMaterial 
           color={surface.color} 
           roughness={surface.roughness}
           metalness={surface.metalness}
           emissive={surface.emissive}
           emissiveIntensity={surface.emissiveIntensity}
+          normalScale={surface.normalScale}
         />
       </mesh>
       
-      {/* Top layer for visual consistency */}
-      <mesh receiveShadow position={[0, 0.1, 0]}>
-        <boxGeometry args={[TILE_SIZE, 0.1, TILE_SIZE]} />
-        <meshStandardMaterial 
-          color={surface.color} 
-          roughness={surface.roughness}
-          metalness={surface.metalness}
-          emissive={surface.emissive}
-          emissiveIntensity={surface.emissiveIntensity * 1.2}
-        />
-      </mesh>
-      
-      {/* Grass details - using tileIndex for consistent positioning */}
+      {/* Add surface details based on type */}
       {surfaceType === 'grass' && (
-        <>
-          {Array.from({ length: 12 }, (_, i) => {
-            // Use tileIndex and i for consistent seeded random positioning
-            const seedX = Math.sin(tileIndex * 0.1 + i * 0.3) * TILE_SIZE * 0.4;
-            const seedZ = Math.cos(tileIndex * 0.15 + i * 0.25) * TILE_SIZE * 0.4;
+        <group>
+          {/* Grass tufts */}
+          {Array.from({ length: 20 }).map((_, i) => {
+            const x = (Math.random() - 0.5) * (TILE_SIZE - 1);
+            const z = (Math.random() - 0.5) * (TILE_SIZE - 1);
             return (
               <mesh 
-                key={i}
-                position={[seedX, 0.25, seedZ]}
-                receiveShadow
-                castShadow
+                key={i} 
+                position={[x, 0.1, z]}
+                rotation={[0, Math.random() * Math.PI, 0]}
               >
-                <boxGeometry args={[0.15, 0.3, 0.15]} />
+                <boxGeometry args={[0.1, 0.2, 0.1]} />
                 <meshStandardMaterial 
-                  color="#15803d" 
-                  roughness={0.8}
-                  metalness={0.0}
-                  emissive="#002200"
-                  emissiveIntensity={0.1}
+                  color="#2d9c3f"
+                  roughness={1}
+                  metalness={0}
                 />
               </mesh>
             );
           })}
-        </>
+        </group>
       )}
     </group>
   );

@@ -18,7 +18,7 @@ export const Camera: React.FC = () => {
   } = useGameStore();
   
   const targetPosition = useRef(new Vector3());
-  const currentPosition = useRef(new Vector3(0, 3, -5)); // Closer initial position
+  const currentPosition = useRef(new Vector3(0, 2.5, -3.5)); // Closer initial position
   const targetLookAt = useRef(new Vector3());
   const currentLookAt = useRef(new Vector3());
   
@@ -29,7 +29,7 @@ export const Camera: React.FC = () => {
   useEffect(() => {
     // Set initial camera position and properties
     camera.position.copy(currentPosition.current);
-    (camera as PerspectiveCamera).fov = 85; // Slightly wider FOV for better character view
+    (camera as PerspectiveCamera).fov = 75; // Reduced FOV for less distortion
     camera.updateProjectionMatrix();
   }, [camera]);
 
@@ -40,30 +40,30 @@ export const Camera: React.FC = () => {
     const speedFactor = Math.min(speedMultiplier, 2.5);
     
     // Enhanced base offset for closer, more dynamic view
-    const baseOffset = new Vector3(0, 2.8, -4.5); // Much closer to character
+    const baseOffset = new Vector3(0, 2.2, -3.2); // Much closer to character
     
     // Adjust camera based on character state
     let stateOffsetY = 0;
     let stateOffsetZ = 0;
     
     if (isSliding) {
-      stateOffsetY -= 0.8; // Lower camera when sliding
-      stateOffsetZ += 0.5; // Move slightly closer
+      stateOffsetY -= 0.6; // Lower camera when sliding
+      stateOffsetZ += 0.3; // Move slightly closer
     }
     
     if (trickJumpActive) {
-      stateOffsetY += 1.2; // Higher camera for trick jumps
-      stateOffsetZ -= 1; // Pull back for better trick view
+      stateOffsetY += 0.8; // Higher camera for trick jumps
+      stateOffsetZ -= 0.5; // Pull back for better trick view
     }
 
     // Dynamic offset with speed-based adjustments
     const dynamicOffset = baseOffset.clone();
-    dynamicOffset.z -= speedFactor * 1.2; // Less pullback for closer view
-    dynamicOffset.y += speedFactor * 0.3 + stateOffsetY;
+    dynamicOffset.z -= speedFactor * 0.8; // Less pullback for closer view
+    dynamicOffset.y += speedFactor * 0.2 + stateOffsetY;
     dynamicOffset.z += stateOffsetZ;
 
     // Enhanced lateral following based on body lean
-    const leanOffset = bodyLean * 1.2; // More responsive lateral movement
+    const leanOffset = bodyLean * 0.8; // More responsive lateral movement
 
     // Target position follows player with enhanced tracking
     targetPosition.current.set(
@@ -125,7 +125,7 @@ export const Camera: React.FC = () => {
     camera.lookAt(currentLookAt.current);
 
     // Enhanced dynamic FOV system
-    const baseFOV = 85; // Higher base FOV for closer view
+    const baseFOV = 75; // Higher base FOV for closer view
     let dynamicFOV = baseFOV;
     
     // Speed-based FOV
