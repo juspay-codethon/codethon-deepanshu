@@ -26,18 +26,18 @@ interface SoundManifest {
 
 const soundManifest: SoundManifest = {
   // Sound Effects
-  jump: { src: ['/sounds/jump.mp3'], volume: 0.7 },
-  doubleJump: { src: ['/sounds/double_jump.mp3'], volume: 0.7 },
-  slide: { src: ['/sounds/slide.mp3'], volume: 0.6 },
-  coinCollect: { src: ['/sounds/coin_collect.mp3'], volume: 0.5 },
-  bonusCollect: { src: ['/sounds/bonus_collect.mp3'], volume: 0.6 },
-  powerUp: { src: ['/sounds/power_up.mp3'], volume: 0.8 },
-  gameOver: { src: ['/sounds/game_over.mp3'], volume: 0.9 },
-  shieldHit: { src: ['/sounds/2573-preview.mp3'], volume: 0.8 }, // Example, replace with actual shield hit sound
+  jump: { src: ['/sounds/jump.wav'], volume: 0.7 },
+  doubleJump: { src: ['/sounds/double_jump.wav'], volume: 0.7 },
+  slide: { src: ['/sounds/slide.wav'], volume: 0.6 },
+  coinCollect: { src: ['/sounds/coin_collect.wav'], volume: 0.5 },
+  bonusCollect: { src: ['/sounds/bonus_collect.wav'], volume: 0.6 },
+  powerUp: { src: ['/sounds/power_up.wav'], volume: 0.8 },
+  gameOver: { src: ['/sounds/game_over.wav'], volume: 0.9 },
+  shieldHit: { src: ['/sounds/shield_hit.wav'], volume: 0.8 }, // Assuming you found a shield_hit.wav
 
   // Music Tracks
-  backgroundMusic: { src: ['/sounds/background_music.mp3'], loop: true, volume: 0.3, html5: true },
-  gameplayMusic: { src: ['/sounds/gameplay_music.mp3'], loop: true, volume: 0.4, html5: true },
+  backgroundMusic: { src: ['/sounds/background_music.wav'], loop: true, volume: 0.3, html5: true },
+  gameplayMusic: { src: ['/sounds/gameplay_music.wav'], loop: true, volume: 0.4, html5: true },
 };
 
 const sounds: { [key: string]: Howl } = {};

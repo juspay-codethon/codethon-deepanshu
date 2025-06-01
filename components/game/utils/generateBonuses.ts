@@ -10,25 +10,19 @@ export interface BonusData {
 }
 
 const LANE_POSITIONS = [-2, 0, 2]; // Left, center, right lanes
-const BONUS_SPAWN_CHANCE = 0.15; // 15% chance per spawn cycle
-const MIN_BONUS_SPACING = 40; // Minimum distance between bonuses
+const BONUS_SPAWN_CHANCE = 0.20; // Increased to 20% chance per spawn cycle
+const MIN_BONUS_SPACING = 30; // Slightly reduced spacing for more bonuses
 
 // Bonus types with their configurations
 const BONUS_TYPES = {
   coin: {
     color: '#ffd700', // Gold
     size: { width: 0.6, height: 0.6, depth: 0.1 },
-    value: 2, // 2 points
-    weight: 4,
-    description: '+2 Score'
+    value: 3, // Increased value to 3 points
+    weight: 10, // Significantly increased weight to make coins more common
+    description: '+3 Score'
   },
-  score: {
-    color: '#00ff00', // Bright green
-    size: { width: 0.8, height: 0.8, depth: 0.3 },
-    value: 5, // 5 points
-    weight: 3,
-    description: '+5 Score'
-  },
+  // Removed 'score' type (the green box)
   speed: {
     color: '#ff6600', // Orange
     size: { width: 0.7, height: 0.7, depth: 0.7 },
@@ -69,10 +63,10 @@ const BONUS_TYPES = {
 // Bonus spawn configuration based on score
 export const getBonusSpawnConfig = (score: number) => {
   return {
-    spawnChance: Math.min(0.25, BONUS_SPAWN_CHANCE + Math.floor(score / 20) * 0.02), // Increase spawn rate with score
-    availableTypes: score < 10 ? ['coin', 'score'] :
-                   score < 25 ? ['coin', 'score', 'speed', 'jump'] :
-                   ['coin', 'score', 'speed', 'jump', 'shield', 'slowmo', 'magnet'], // All types after score 25
+    spawnChance: Math.min(0.30, BONUS_SPAWN_CHANCE + Math.floor(score / 15) * 0.02), // Further increase spawn rate with score
+    availableTypes: score < 10 ? ['coin'] : // Early game only coins
+                   score < 25 ? ['coin', 'speed', 'jump'] : // Introduce some power-ups
+                   ['coin', 'speed', 'jump', 'shield', 'slowmo', 'magnet'], // All types (excluding 'score') after score 25
   };
 };
 
@@ -175,4 +169,4 @@ export const checkBonusCollection = (
 export const cleanupBonuses = (bonuses: BonusData[], playerZ: number): BonusData[] => {
   // Remove bonuses that are too far behind the player
   return bonuses.filter(bonus => bonus.position.z > playerZ - 50);
-}; 
+};

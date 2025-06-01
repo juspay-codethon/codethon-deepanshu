@@ -11,6 +11,7 @@ import {
   checkBonusCollection,
   cleanupBonuses
 } from './utils/generateBonuses';
+import { playSoundEffect } from './utils/audioManager'; // Corrected path
 
 const PLAYER_SIZE = { width: 0.5, height: 1.8, depth: 0.3 };
 const MAGNETIC_FORCE = 8; // How strong the magnetic pull is
@@ -211,10 +212,15 @@ export const Bonus: React.FC = () => {
         bonus.collected = true;
         bonus.active = false;
         
-        // Activate the bonus effect
+        // Play sound based on bonus type
         if (bonus.type === 'coin' || bonus.type === 'score') {
+          playSoundEffect('coinCollect');
           activateBonus(bonus.type, 0, bonus.value);
         } else {
+          // For other types like speed, jump, shield, magnet, slowmo
+          playSoundEffect('bonusCollect'); // Generic bonus collect sound
+          // Consider if a specific 'powerUp' sound should also play here or in the store
+          // For now, 'bonusCollect' will cover these.
           activateBonus(bonus.type, bonus.value, bonus.value);
         }
       }

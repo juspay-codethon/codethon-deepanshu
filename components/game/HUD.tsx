@@ -2,6 +2,7 @@
 
 import { useGameStore } from './store/useGameStore';
 import { useState, useEffect } from 'react';
+import { playMusic, stopMusic } from './utils/audioManager'; // Corrected path
 
 export const HUD: React.FC = () => {
   const { 
@@ -28,6 +29,34 @@ export const HUD: React.FC = () => {
     loadHighScores();
     setTempName(playerName);
   }, [loadHighScores, playerName]);
+
+  useEffect(() => {
+    if (!isPlaying && !isGameOver) {
+      playMusic('backgroundMusic');
+    } else {
+      // If game is playing or game is over and we are not on the initial start screen,
+      // gameplayMusic or other logic in useGameStore will handle stopping/changing tracks.
+      // However, explicitly stopping backgroundMusic if HUD is no longer in a state to play it.
+      // This might be redundant if useGameStore's logic is comprehensive.
+      // For now, let's ensure backgroundMusic stops if HUD isn't showing start/gameover.
+      // This specific stop might not be needed if gameplayMusic always takes over.
+      // Let's refine: only play, let the store manage stopping for gameplay.
+      // The store's setGameOver already calls stopMusic.
+      // The store's startGame calls playMusic('gameplayMusic') which fades out current.
+    }
+    // This effect should primarily be for *starting* background music on landing/game over screens.
+  }, [isPlaying, isGameOver]);
+
+  // More refined music logic for HUD:
+  useEffect(() => {
+    if (!isPlaying && isClient) { // Play on initial load (start screen) or after game over
+      playMusic('backgroundMusic');
+    }
+    // Gameplay music is handled by startGame in useGameStore
+    // Stop music on game over is handled by setGameOver in useGameStore
+    // This hook ensures background music plays when the main menu / game over screen is visible.
+  }, [isPlaying, isGameOver, isClient]);
+
 
   const handleStart = () => {
     if (tempName.trim()) {
@@ -75,12 +104,10 @@ export const HUD: React.FC = () => {
             </div>
           </div>
           
-          {/* High Score Indicator */}
-          {score >= highScore - 5 && (
-            <div className={`${glassStyle} text-white px-4 py-2 rounded-xl text-sm transition-all duration-300 ${score >= highScore ? 'animate-pulse text-yellow-400' : 'text-gray-300'}`}>
-              {score >= highScore ? '🏆 NEW BEST!' : `🏆 BEST: ${highScore}`}
-            </div>
-          )}
+          {/* High Score Indicator - Always visible during gameplay */}
+          <div className={`${glassStyle} text-white px-4 py-2 rounded-xl text-sm transition-all duration-300 ${score >= highScore && highScore > 0 ? 'animate-pulse text-yellow-400' : 'text-gray-300'}`}>
+            {score >= highScore && highScore > 0 ? '🏆 NEW BEST!' : (highScore > 0 ? `🏆 BEST: ${highScore}` : '🏆 BEST: 0')}
+          </div>
           
           {/* Style Points */}
           {stylePoints > 0 && (
@@ -223,4 +250,4 @@ export const HUD: React.FC = () => {
       )}
     </div>
   );
-}; 
+};

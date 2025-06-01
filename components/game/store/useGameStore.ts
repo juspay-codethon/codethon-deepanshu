@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { playMusic, stopMusic, preloadSounds } from '../utils/audioManager'; // Import audio functions
+import { playMusic, stopMusic, preloadSounds, playSoundEffect } from '../utils/audioManager'; // Import audio functions
 
 interface HighScoreEntry {
   name: string;
@@ -218,13 +218,13 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
   
   setGameOver: () => {
-    stopMusic(); // Stop music on game over
+    // stopMusic(); // HUD will handle playing backgroundMusic on game over screen
     get().saveHighScore();
     set({ isGameOver: true, isPlaying: false });
   },
   
   resetGame: () => {
-    stopMusic(); // Stop music on game reset
+    // stopMusic(); // Music will be handled by HUD's useEffect based on isPlaying/isGameOver state
     set({
       score: 0,
       isGameOver: false,
@@ -352,6 +352,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         break;
       case 'speedBoost':
       case 'speed':
+        playSoundEffect('powerUp');
         set({
           bonusEffects: { ...bonusEffects, speedBoost: duration },
           lastBonusMessage: 'Speed Boost!'
@@ -359,6 +360,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         break;
       case 'jumpBoost':
       case 'jump':
+        playSoundEffect('powerUp');
         set({
           bonusEffects: { ...bonusEffects, jumpBoost: duration },
           lastBonusMessage: 'Jump Boost!'
@@ -366,6 +368,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         break;
       case 'shield':
         if (duration > 0) {
+          playSoundEffect('powerUp');
           set({
             bonusEffects: { ...bonusEffects, shield: duration },
             lastBonusMessage: 'Shield Active!'
@@ -385,12 +388,14 @@ export const useGameStore = create<GameState>((set, get) => ({
         });
         break;
       case 'slowmo':
+        playSoundEffect('powerUp');
         set({
           bonusEffects: { ...bonusEffects, slowMotion: duration },
           lastBonusMessage: 'Slow Motion!'
         });
         break;
       case 'magnet':
+        playSoundEffect('powerUp');
         set({
           bonusEffects: { ...bonusEffects, magnet: duration },
           lastBonusMessage: 'Coin Magnet!'

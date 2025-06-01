@@ -21,6 +21,7 @@ import { Sky } from './Sky';
 import { Camera } from './Camera';
 import { HUD } from './HUD';
 import { ParticleSystem } from './ParticleSystem';
+import { Loader } from '../ui/Loader'; // Import the Loader
 
 export const Game: React.FC = () => {
   return (
@@ -43,7 +44,7 @@ export const Game: React.FC = () => {
         }}
         dpr={[1, 1.5]} // Reduced max DPR for performance
       >
-        <Suspense fallback={null}>
+        <Suspense fallback={<Loader message="Loading Game Assets..." />}>
           {/* Optimized Lighting System */}
           <ambientLight intensity={0.3} color="#b4d4ff" />
           
