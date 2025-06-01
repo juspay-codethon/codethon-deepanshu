@@ -2,7 +2,7 @@
 
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Points, PointsMaterial, BufferGeometry, Vector3, Color } from 'three';
+import { Points, Vector3, Color } from 'three'; // Removed PointsMaterial, BufferGeometry
 import { useGameStore } from './store/useGameStore';
 
 interface Particle {
@@ -25,7 +25,7 @@ export const ParticleSystem: React.FC = () => {
     speedMultiplier,
     isSliding,
     trickJumpActive,
-    hasDoubleJumped,
+    // hasDoubleJumped, // Removed as it's not directly used for particle emission logic here
     hasMagneticPull 
   } = useGameStore();
 
@@ -100,20 +100,7 @@ export const ParticleSystem: React.FC = () => {
     particle.type = 'slide';
   };
 
-  const createCollectionParticle = (index: number, pos: Vector3, color: Color) => {
-    const particle = particlesRef.current[index];
-    particle.position.copy(pos);
-    particle.velocity.set(
-      (Math.random() - 0.5) * 6,
-      Math.random() * 8 + 3,
-      (Math.random() - 0.5) * 6
-    );
-    particle.life = 1;
-    particle.maxLife = 1.5;
-    particle.size = 0.8 + Math.random() * 0.7;
-    particle.color.copy(color);
-    particle.type = 'collection';
-  };
+  // Removed unused createCollectionParticle function
 
   const createSpeedParticle = (index: number) => {
     const particle = particlesRef.current[index];
@@ -203,7 +190,7 @@ export const ParticleSystem: React.FC = () => {
   useFrame((state, delta) => {
     if (!isPlaying) return;
 
-    let activeParticles = 0;
+    // let activeParticles = 0; // Removed unused variable
 
     // Update existing particles
     particlesRef.current.forEach((particle, index) => {
@@ -249,7 +236,7 @@ export const ParticleSystem: React.FC = () => {
           }
           sizes[index] = size;
           
-          activeParticles++;
+          // activeParticles++; // Removed unused increment
         } else {
           // Hide dead particle
           positions[index * 3 + 1] = -100;
@@ -327,4 +314,4 @@ export const ParticleSystem: React.FC = () => {
       />
     </points>
   );
-}; 
+};

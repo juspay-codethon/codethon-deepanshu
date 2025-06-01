@@ -239,9 +239,9 @@ export const generateRandomObstacle = (
   playerZ: number, 
   existingObstacles: ObstacleData[], 
   speedMultiplier: number = 1,
-  score: number = 0
+  _score: number = 0 // Renamed to _score
 ): ObstacleData => {
-  const difficulty = getDifficultyConfig(score);
+  const difficulty = getDifficultyConfig(_score); // Use _score
   
   // Find the furthest obstacle to place new one ahead
   const furthestZ = existingObstacles.length > 0 
@@ -266,7 +266,7 @@ export const generateRandomObstacle = (
   }
 
   const obstacleConfig = OBSTACLE_TYPES[selectedType as keyof typeof OBSTACLE_TYPES];
-  const surfaceType = getSurfaceType(score);
+  const surfaceType = getSurfaceType(_score); // Use _score
   
   // For barrier type, place across all lanes
   let randomLane = 0;
@@ -302,7 +302,7 @@ export const generateFixedPattern = (
   playerZ: number, 
   existingObstacles: ObstacleData[], 
   speedMultiplier: number = 1,
-  score: number = 0
+  _score: number = 0 // Renamed to _score
 ): ObstacleData[] => {
   const furthestZ = existingObstacles.length > 0 
     ? Math.max(...existingObstacles.map(obs => obs.position.z))
@@ -311,7 +311,7 @@ export const generateFixedPattern = (
   const pattern = FIXED_PATTERNS[Math.floor(Math.random() * FIXED_PATTERNS.length)];
   const adjustedSpacing = BASE_OBSTACLE_SPACING * Math.max(1, speedMultiplier * 0.8);
   const baseZ = furthestZ + adjustedSpacing + 20;
-  const surfaceType = getSurfaceType(score);
+  const surfaceType = getSurfaceType(_score); // Use _score
 
   return pattern.obstacles.map((obs, index) => {
     const obstacleConfig = OBSTACLE_TYPES[obs.type];
@@ -490,4 +490,4 @@ export const checkCollision = (
 export const cleanupObstacles = (obstacles: ObstacleData[], playerZ: number): ObstacleData[] => {
   // Remove obstacles that are too far behind the player
   return obstacles.filter(obstacle => obstacle.position.z > playerZ - 30);
-}; 
+};

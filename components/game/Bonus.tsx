@@ -25,7 +25,7 @@ interface SingleBonusProps {
 const SingleBonus: React.FC<SingleBonusProps> = ({ bonus, magnetPosition, isBeingMagnetized }) => {
   const meshRef = useRef<Mesh>(null);
   const originalPositionRef = useRef(new Vector3(bonus.position.x, bonus.position.y, bonus.position.z));
-  const magnetTargetRef = useRef<Vector3 | null>(null);
+  // const magnetTargetRef = useRef<Vector3 | null>(null); // Removed unused ref
   
   // Handle magnetic attraction
   useFrame((state, delta) => {
@@ -258,4 +258,4 @@ export const Bonus: React.FC = () => {
         })}
     </group>
   );
-}; 
+};

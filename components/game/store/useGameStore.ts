@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { playMusic, stopMusic, preloadSounds } from '../utils/audioManager'; // Import audio functions
 
 interface HighScoreEntry {
   name: string;
@@ -16,18 +17,18 @@ interface BonusEffects {
 }
 
 // Safe localStorage functions
-const getStorageItem = (key: string): string | null => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem(key);
-  }
-  return null;
-};
+// const getStorageItem = (key: string): string | null => { // Removed unused function
+//   if (typeof window !== 'undefined') {
+//     return localStorage.getItem(key);
+//   }
+//   return null;
+// };
 
-const setStorageItem = (key: string, value: string): void => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(key, value);
-  }
-};
+// const setStorageItem = (key: string, value: string): void => { // Removed unused function
+//   if (typeof window !== 'undefined') {
+//     localStorage.setItem(key, value);
+//   }
+// };
 
 // Initial state values
 const initialState = {
@@ -116,31 +117,29 @@ type GameState = {
   hasMagneticPull: () => boolean;
 };
 
-// Get initial high scores safely
-const getInitialHighScores = (): HighScoreEntry[] => {
-  try {
-    const savedScores = getStorageItem('highScores');
-    if (savedScores) {
-      return JSON.parse(savedScores);
-    }
-  } catch (error) {
-    console.error('Error loading initial high scores:', error);
-  }
-  return [];
-};
+// const getInitialHighScores = (): HighScoreEntry[] => { // Removed unused function
+//   try {
+//     const savedScores = getStorageItem('highScores');
+//     if (savedScores) {
+//       return JSON.parse(savedScores);
+//     }
+//   } catch (error) {
+//     console.error('Error loading initial high scores:', error);
+//   }
+//   return [];
+// };
 
-// Get initial high score safely
-const getInitialHighScore = (): number => {
-  try {
-    const savedHighScore = getStorageItem('highScore');
-    if (savedHighScore) {
-      return parseInt(savedHighScore);
-    }
-  } catch (error) {
-    console.error('Error loading initial high score:', error);
-  }
-  return 0;
-};
+// const getInitialHighScore = (): number => { // Removed unused function
+//   try {
+//     const savedHighScore = getStorageItem('highScore');
+//     if (savedHighScore) {
+//       return parseInt(savedHighScore);
+//     }
+//   } catch (error) {
+//     console.error('Error loading initial high score:', error);
+//   }
+//   return 0;
+// };
 
 export const useGameStore = create<GameState>((set, get) => ({
   ...initialState,
@@ -219,11 +218,13 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
   
   setGameOver: () => {
+    stopMusic(); // Stop music on game over
     get().saveHighScore();
     set({ isGameOver: true, isPlaying: false });
   },
   
-  resetGame: () =>
+  resetGame: () => {
+    stopMusic(); // Stop music on game reset
     set({
       score: 0,
       isGameOver: false,
@@ -249,18 +250,22 @@ export const useGameStore = create<GameState>((set, get) => ({
         magnet: 0,
       },
       lastBonusMessage: '',
-    }),
+    });
+  },
   
-  startGame: () =>
-    set({ isPlaying: true, isGameOver: false }),
+  startGame: () => {
+    preloadSounds(); // Ensure sounds are loaded before starting music
+    set({ isPlaying: true, isGameOver: false });
+    playMusic('gameplayMusic'); // Play music when game starts
+  },
   
   updateSpeed: () => {
     const { score } = get();
     // More gradual speed increase:
     // Start at base speed (1.0x)
-    // Increase by 2% every 10 points
+    // Increase by 5% every 10 points (faster increase)
     // Cap at 2.0x speed
-    const speedIncrease = Math.floor(score / 10) * 0.02;
+    const speedIncrease = Math.floor(score / 10) * 0.05; // Changed 0.02 to 0.05
     const newSpeedMultiplier = Math.min(1 + speedIncrease, 2.0);
     set({ speedMultiplier: newSpeedMultiplier });
   },
@@ -295,40 +300,40 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({ lastDirection: direction }),
   
   updateBodyLean: (deltaTime) => {
-    set((state) => ({
+    set((state) => ({ // state is used here
       bodyLean: Math.max(-1, Math.min(1, state.bodyLean + deltaTime * 0.1)),
     }));
   },
   
   startJump: () => {
-    set((state) => ({
+    set(() => ({ // state removed as not used
       isJumping: true,
       jumpStartTime: Date.now(),
     }));
   },
   
   performDoubleJump: () => {
-    set((state) => ({
+    set(() => ({ // state removed as not used
       hasDoubleJumped: true,
       canDoubleJump: false,
     }));
   },
   
   startTrickJump: (type) => {
-    set((state) => ({
+    set(() => ({ // state removed as not used
       trickJumpActive: true,
       trickJumpType: type,
     }));
   },
   
   endTrickJump: () => {
-    set((state) => ({
+    set(() => ({ // state removed as not used
       trickJumpActive: false,
     }));
   },
   
   resetJumpState: () => {
-    set((state) => ({
+    set(() => ({ // state removed as not used
       isJumping: false,
       canDoubleJump: true,
       hasDoubleJumped: false,
@@ -454,4 +459,4 @@ if (typeof window !== 'undefined') {
   } catch (error) {
     console.error('Error loading initial high scores:', error);
   }
-} 
+}
