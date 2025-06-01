@@ -33,7 +33,7 @@ export const Camera: React.FC = () => {
     camera.updateProjectionMatrix();
   }, [camera]);
 
-  useFrame((state, delta) => {
+  useFrame(() => { // Removed state and delta as they are not used
     if (!isPlaying) return;
 
     // Calculate dynamic camera offset based on speed and character state
@@ -152,4 +152,4 @@ export const Camera: React.FC = () => {
   });
 
   return null;
-}; 
+};

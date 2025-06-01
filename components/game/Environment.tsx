@@ -1,113 +1,132 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo } from 'react'; // Added useMemo
 import { useFrame } from '@react-three/fiber';
-import { Group } from 'three';
+// import { Group, MeshStandardMaterial } from 'three'; // Removed unused direct imports
+import * as THREE from 'three'; // Added THREE
+// import { useTexture } from '@react-three/drei'; // Removed useTexture
 import { useGameStore } from './store/useGameStore';
 
 const ENV_SPACING = 15;
 const SIDE_DISTANCE = 8; // Distance from center track
 
 // Tree component for grass areas
-const Tree: React.FC<{ position: [number, number, number] }> = ({ position }) => (
-  <group position={position}>
-    {/* Trunk */}
-    <mesh position={[0, 1, 0]}>
-      <cylinderGeometry args={[0.3, 0.4, 2, 8]} />
-      <meshStandardMaterial color="#8b4513" />
-    </mesh>
-    {/* Leaves */}
-    <mesh position={[0, 2.5, 0]}>
-      <sphereGeometry args={[1.2, 8, 6]} />
-      <meshStandardMaterial color="#228b22" />
-    </mesh>
-    <mesh position={[0, 3.2, 0]}>
-      <sphereGeometry args={[0.8, 8, 6]} />
-      <meshStandardMaterial color="#32cd32" />
-    </mesh>
-  </group>
-);
+const Tree: React.FC<{ position: [number, number, number] }> = ({ position }) => {
+  const trunkMaterial = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#8b4513', // Brown
+    roughness: 0.8,
+    metalness: 0.0,
+  }), []);
+
+  const leafMaterial = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#228b22', // Green
+    roughness: 0.7,
+    metalness: 0.0,
+    // side: THREE.DoubleSide, // Not strictly needed for opaque spheres
+  }), []);
+
+  return (
+    <group position={position}>
+      <mesh position={[0, 1, 0]} material={trunkMaterial} castShadow>
+        <cylinderGeometry args={[0.3, 0.4, 2, 8]} />
+      </mesh>
+      <mesh position={[0, 2.5, 0]} material={leafMaterial} castShadow>
+        <sphereGeometry args={[1.2, 8, 6]} />
+      </mesh>
+      <mesh position={[0, 3.2, 0]} material={leafMaterial} castShadow>
+        <sphereGeometry args={[0.8, 8, 6]} />
+      </mesh>
+    </group>
+  );
+};
 
 // Rock formation for mud areas
-const Rock: React.FC<{ position: [number, number, number] }> = ({ position }) => (
-  <group position={position}>
-    <mesh>
-      <boxGeometry args={[1.5, 1, 1.2]} />
-      <meshStandardMaterial color="#696969" />
-    </mesh>
-    <mesh position={[0.8, 0.3, 0.5]}>
-      <boxGeometry args={[0.8, 0.6, 0.7]} />
-      <meshStandardMaterial color="#778899" />
-    </mesh>
-  </group>
-);
+const Rock: React.FC<{ position: [number, number, number] }> = ({ position }) => {
+  const rockMaterial = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#696969', // Grey
+    roughness: 0.9,
+    metalness: 0.1,
+  }), []);
+
+  return (
+    <group position={position}>
+      <mesh material={rockMaterial} castShadow>
+        <boxGeometry args={[1.5, 1, 1.2]} />
+      </mesh>
+      <mesh position={[0.8, 0.3, 0.5]} material={rockMaterial} castShadow>
+        <boxGeometry args={[0.8, 0.6, 0.7]} />
+      </mesh>
+    </group>
+  );
+};
 
 // Building for road areas
-const Building: React.FC<{ position: [number, number, number]; isLeft: boolean }> = ({ position, isLeft }) => (
-  <group position={position}>
-    {/* Main building */}
-    <mesh position={[0, 2, 0]}>
-      <boxGeometry args={[3, 4, 2]} />
-      <meshStandardMaterial color="#d3d3d3" />
-    </mesh>
-    {/* Roof */}
-    <mesh position={[0, 4.2, 0]}>
-      <boxGeometry args={[3.2, 0.4, 2.2]} />
-      <meshStandardMaterial color="#8b4513" />
-    </mesh>
-    {/* Windows */}
-    {Array.from({ length: 6 }, (_, i) => (
-      <mesh 
-        key={i}
-        position={[
-          isLeft ? 1.51 : -1.51, 
-          1.5 + (i % 2) * 1.2, 
-          -0.6 + (Math.floor(i / 2) * 0.6)
-        ]}
-      >
-        <boxGeometry args={[0.02, 0.4, 0.4]} />
-        <meshStandardMaterial color="#87ceeb" />
+const Building: React.FC<{ position: [number, number, number]; isLeft: boolean }> = ({ position, isLeft }) => {
+  const wallMaterial = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#d3d3d3', roughness: 0.7, metalness: 0.1 
+  }), []);
+  const roofMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: '#8b4513', roughness: 0.8 }), []);
+  const windowMaterial = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#87ceeb', transparent: true, opacity: 0.7, roughness: 0.2, metalness: 0.0 
+  }), []);
+
+  return (
+    <group position={position}>
+      <mesh position={[0, 2, 0]} material={wallMaterial} castShadow>
+        <boxGeometry args={[3, 4, 2]} />
       </mesh>
-    ))}
-  </group>
-);
+      <mesh position={[0, 4.2, 0]} material={roofMaterial} castShadow>
+        <boxGeometry args={[3.2, 0.4, 2.2]} />
+      </mesh>
+      {Array.from({ length: 6 }, (_, i) => (
+        <mesh 
+          key={i}
+          position={[ isLeft ? 1.51 : -1.51, 1.5 + (i % 2) * 1.2, -0.6 + (Math.floor(i / 2) * 0.6)]}
+          material={windowMaterial}
+        >
+          <planeGeometry args={[0.4, 0.4]} /> {/* Use plane for windows */}
+        </mesh>
+      ))}
+    </group>
+  );
+};
 
 // Highway barrier and signs
-const HighwayBarrier: React.FC<{ position: [number, number, number] }> = ({ position }) => (
-  <group position={position}>
-    {/* Concrete barrier */}
-    <mesh position={[0, 0.4, 0]}>
-      <boxGeometry args={[0.3, 0.8, 5]} />
-      <meshStandardMaterial color="#c0c0c0" />
-    </mesh>
-    {/* Reflective strips */}
-    <mesh position={[0, 0.6, 0]}>
-      <boxGeometry args={[0.31, 0.1, 5]} />
-      <meshStandardMaterial color="#ffff00" />
-    </mesh>
-  </group>
-);
+const HighwayBarrier: React.FC<{ position: [number, number, number] }> = ({ position }) => {
+  const concreteMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: '#c0c0c0', roughness: 0.9, metalness: 0.1 }), []);
+  const reflectiveMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: "#ffff00", emissive: "#dddd00", emissiveIntensity: 0.8, roughness: 0.4 }), []);
 
-// Sign post for highway
-const HighwaySign: React.FC<{ position: [number, number, number] }> = ({ position }) => (
-  <group position={position}>
-    {/* Post */}
-    <mesh position={[0, 2.5, 0]}>
-      <cylinderGeometry args={[0.1, 0.1, 5, 8]} />
-      <meshStandardMaterial color="#696969" />
-    </mesh>
-    {/* Sign */}
-    <mesh position={[0, 4, 0]}>
-      <boxGeometry args={[2, 1, 0.1]} />
-      <meshStandardMaterial color="#008000" />
-    </mesh>
-    {/* Sign text background */}
-    <mesh position={[0, 4, 0.06]}>
-      <boxGeometry args={[1.8, 0.8, 0.01]} />
-      <meshStandardMaterial color="#ffffff" />
-    </mesh>
-  </group>
-);
+  return (
+    <group position={position}>
+      <mesh position={[0, 0.4, 0]} material={concreteMaterial} castShadow>
+        <boxGeometry args={[0.3, 0.8, 5]} />
+      </mesh>
+      <mesh position={[0, 0.6, 0]} material={reflectiveMaterial}>
+        <boxGeometry args={[0.31, 0.1, 5]} />
+      </mesh>
+    </group>
+  );
+};
+
+const HighwaySign: React.FC<{ position: [number, number, number] }> = ({ position }) => {
+  const poleMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: '#696969', metalness: 0.9, roughness: 0.3 }), []);
+  const signMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: '#008000', roughness: 0.7 }), []);
+  const textBgMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.9 }), []);
+
+  return (
+    <group position={position}>
+      <mesh position={[0, 2.5, 0]} material={poleMaterial} castShadow>
+        <cylinderGeometry args={[0.1, 0.1, 5, 8]} />
+      </mesh>
+      <mesh position={[0, 4, 0]} material={signMaterial} castShadow>
+        <boxGeometry args={[2, 1, 0.1]} />
+      </mesh>
+      <mesh position={[0, 4, 0.06]} material={textBgMaterial}> {/* Slightly in front for text */}
+        <boxGeometry args={[1.8, 0.8, 0.01]} />
+      </mesh>
+    </group>
+  );
+};
 
 interface EnvironmentElementData {
   id: string;
@@ -117,23 +136,10 @@ interface EnvironmentElementData {
 }
 
 export const Environment: React.FC = () => {
-  const { playerPosition, isPlaying, speedMultiplier, score } = useGameStore();
+  const { playerPosition, isPlaying, speedMultiplier } = useGameStore(); // Removed score
   const elementsRef = useRef<EnvironmentElementData[]>([]);
 
-  // Get current surface type - now always grass
-  const getSurfaceType = (currentScore: number) => {
-    // Always return grass for infinite grass gameplay
-    return 'grass';
-    
-    // Original progression (commented out):
-    // const progressDistance = currentScore * 5;
-    // if (progressDistance < 50) return 'grass';
-    // if (progressDistance < 150) return 'mud';
-    // if (progressDistance < 300) return 'road';
-    // return 'highway';
-  };
-
-  const currentSurface = getSurfaceType(score);
+  // Removed unused getSurfaceType function and currentSurface variable
 
   // Generate environment elements - now always trees for grass
   const generateEnvironmentElement = (z: number, side: 'left' | 'right'): EnvironmentElementData => {
@@ -221,4 +227,4 @@ export const Environment: React.FC = () => {
       })}
     </group>
   );
-}; 
+};

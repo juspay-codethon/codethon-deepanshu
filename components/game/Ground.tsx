@@ -2,14 +2,14 @@
 
 import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Group } from 'three';
+import { Group } from 'three'; // Removed Mesh
 import { useGameStore } from './store/useGameStore';
 import * as THREE from 'three';
 
 const TILE_SIZE = 20;
 const TILE_OVERLAP = 0.8; // Increased overlap for better high-speed coverage
-const NUM_TILES = 35; // Increased significantly for high-speed gameplay
-const BASE_FORWARD_SPEED = 12;
+const NUM_TILES = 70; // Significantly increased for longer view distance
+// const BASE_FORWARD_SPEED = 12; // Removed unused constant
 
 // Surface types with enhanced PBR materials
 const SURFACE_TYPES = {
@@ -58,10 +58,10 @@ const SURFACE_TYPES = {
 interface TileProps {
   position: [number, number, number];
   surfaceType: keyof typeof SURFACE_TYPES;
-  tileIndex: number;
+  // tileIndex: number; // Removed unused prop
 }
 
-const Tile: React.FC<TileProps> = ({ position, surfaceType, tileIndex }) => {
+const Tile: React.FC<TileProps> = ({ position, surfaceType /*, tileIndex*/ }) => {
   const surface = SURFACE_TYPES[surfaceType];
   
   return (
@@ -138,7 +138,7 @@ const Tile: React.FC<TileProps> = ({ position, surfaceType, tileIndex }) => {
 
 export const Ground: React.FC = () => {
   const groupRef = useRef<Group>(null);
-  const { playerPosition, isPlaying, speedMultiplier, score } = useGameStore();
+  const { playerPosition, isPlaying, speedMultiplier } = useGameStore(); // Removed score
 
   // Always return grass for infinite grass gameplay
   const getSurfaceType = (): keyof typeof SURFACE_TYPES => 'grass';
@@ -150,7 +150,7 @@ export const Ground: React.FC = () => {
       z: (i - Math.floor(NUM_TILES / 2)) * (TILE_SIZE - TILE_OVERLAP),
       surfaceType: getSurfaceType(),
     }));
-  }, [isPlaying]);
+  }, []); // Removed isPlaying from dependency array
 
   const tilesRef = useRef(tiles);
 
@@ -165,7 +165,7 @@ export const Ground: React.FC = () => {
     }
   }, [isPlaying]);
 
-  useFrame((state, delta) => {
+  useFrame(() => { // Removed state and delta
     if (!isPlaying) return;
 
     const tileSpacing = TILE_SIZE - TILE_OVERLAP;
@@ -176,7 +176,7 @@ export const Ground: React.FC = () => {
     const aheadDistance = Math.max(TILE_SIZE * 6, TILE_SIZE * 4 * speedMultiplier);
 
     // More aggressive tile recycling with speed-based adjustments
-    tilesRef.current.forEach((tile, index) => {
+    tilesRef.current.forEach((tile) => { // Removed unused index
       // Recycle tiles based on dynamic distance that scales with speed
       if (tile.z < playerPosition.z - recycleDistance) {
         const furthestTileZ = Math.max(...tilesRef.current.map(t => t.z));
@@ -216,33 +216,31 @@ export const Ground: React.FC = () => {
 
   return (
     <group ref={groupRef}>
-      {/* Multiple background layers for bulletproof coverage */}
-      
-      {/* Deep background plane - static for performance */}
-      <mesh position={[0, -1, 0]} receiveShadow>
-        <boxGeometry args={[100, 0.5, 1000]} />
-        <meshStandardMaterial color="#22c55e" />
+      {/* Vast, moving background plane to ensure no gaps at horizon */}
+      <mesh position={[0, -1.5, playerPosition.z]} receiveShadow>
+        <boxGeometry args={[500, 0.5, NUM_TILES * TILE_SIZE * 1.5]} /> {/* Very wide and long */}
+        <meshStandardMaterial color="#1c994e" fog={false} /> {/* Slightly darker, no fog for this one */}
       </mesh>
       
-      {/* Moving background plane that follows player */}
+      {/* Moving background plane that follows player - slightly elevated from the deep one */}
       <mesh position={[0, -0.3, playerPosition.z]} receiveShadow>
-        <boxGeometry args={[50, 0.2, 500]} />
-        <meshStandardMaterial color="#22c55e" />
+        <boxGeometry args={[100, 0.2, (NUM_TILES * TILE_SIZE) / 2 ]} /> {/* Covers half the tile length */}
+        <meshStandardMaterial color="#20a856" /> 
       </mesh>
       
-      {/* Near-surface backup plane */}
+      {/* Near-surface backup plane - also wider */}
       <mesh position={[0, -0.15, playerPosition.z]} receiveShadow>
-        <boxGeometry args={[30, 0.1, 300]} />
+        <boxGeometry args={[60, 0.1, (NUM_TILES * TILE_SIZE) / 3]} />
         <meshStandardMaterial color="#22c55e" />
       </mesh>
       
       {/* Main tiles with enhanced coverage */}
-      {tilesRef.current.map((tile, index) => (
+      {tilesRef.current.map((tile) => ( // Removed unused index
         <Tile 
           key={`tile-${tile.id}`}
           position={[0, 0, tile.z]} 
           surfaceType={tile.surfaceType}
-          tileIndex={index}
+          // tileIndex={index} // Prop removed
         />
       ))}
       
@@ -253,4 +251,4 @@ export const Ground: React.FC = () => {
       </mesh>
     </group>
   );
-}; 
+};

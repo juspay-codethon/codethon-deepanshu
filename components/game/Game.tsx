@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 import { 
   EffectComposer, 
   Bloom, 
-  DepthOfField, 
+  // DepthOfField, // Removed unused import
   Vignette,
   SMAA,
   ToneMapping
@@ -31,7 +31,7 @@ export const Game: React.FC = () => {
           position: [0, 2.5, -3.5],
           fov: 75,
           near: 0.1,
-          far: 300
+          far: 2000 // Increased far plane
         }}
         gl={{ 
           antialias: true, 
@@ -39,7 +39,7 @@ export const Game: React.FC = () => {
           powerPreference: "high-performance",
           stencil: false,
           depth: true,
-          logarithmicDepthBuffer: false, // Disabled for performance
+          logarithmicDepthBuffer: true, // Re-enabled for better depth precision
         }}
         dpr={[1, 1.5]} // Reduced max DPR for performance
       >
@@ -53,11 +53,11 @@ export const Game: React.FC = () => {
             intensity={1.4}
             castShadow
             shadow-mapSize={[1024, 1024]} // Reduced for performance
-            shadow-camera-far={150}
-            shadow-camera-left={-30}
-            shadow-camera-right={30}
-            shadow-camera-top={30}
-            shadow-camera-bottom={-30}
+            shadow-camera-far={300} // Increased shadow camera far slightly
+            shadow-camera-left={-50} // Expanded shadow camera frustum
+            shadow-camera-right={50}
+            shadow-camera-top={50}
+            shadow-camera-bottom={-50}
             shadow-bias={-0.0001}
             color="#ffeaa7"
           />
@@ -76,8 +76,8 @@ export const Game: React.FC = () => {
             color="#ffffff"
           />
 
-          {/* Atmospheric fog for depth */}
-          <fog attach="fog" args={['#b4d4ff', 60, 150]} />
+          {/* Atmospheric fog for depth - adjusted distances */}
+          <fog attach="fog" args={['#b4d4ff', 100, 1000]} /> 
           
           {/* HDRI Environment for realistic reflections */}
           <DreiEnvironment preset="sunset" background={false} />
@@ -123,4 +123,4 @@ export const Game: React.FC = () => {
       <HUD />
     </div>
   );
-}; 
+};

@@ -312,7 +312,7 @@ export const Obstacle: React.FC = () => {
     }
   }, [isPlaying, playerPosition.z, speedMultiplier, score]);
 
-  useFrame((state, delta) => {
+  useFrame(() => { // Removed state and delta
     if (!isPlaying) return;
 
     // Check for collisions with enhanced sliding detection
@@ -426,4 +426,4 @@ export const Obstacle: React.FC = () => {
       ))}
     </group>
   );
-}; 
+};

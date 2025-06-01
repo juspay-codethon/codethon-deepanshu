@@ -1,10 +1,10 @@
 'use client';
 
-import { useRef, useMemo, useEffect } from 'react';
+import { useRef, useMemo } from 'react'; // Removed useEffect
 import { useFrame } from '@react-three/fiber';
-import { Mesh, Color, Group, BackSide } from 'three';
+import { Mesh, Group, BackSide } from 'three'; // Removed Color
 import * as THREE from 'three';
-import { useGameStore } from './store/useGameStore';
+// import { useGameStore } from './store/useGameStore'; // Removed unused import
 
 // Enhanced sky theme with dynamic colors
 const SKY_THEME = {
@@ -22,7 +22,7 @@ const Cloud: React.FC<{ position: [number, number, number]; scale: number; cloud
   cloudId 
 }) => {
   const cloudRef = useRef<Mesh>(null);
-  const { isPlaying } = useGameStore();
+  // const { isPlaying } = useGameStore(); // Removed unused isPlaying
   
   useFrame((state) => {
     if (!cloudRef.current) return;
@@ -105,9 +105,9 @@ export const Sky: React.FC = () => {
 
   return (
     <group ref={groupRef}>
-      {/* Sky dome */}
-      <mesh position={[0, 0, 0]} renderOrder={-1}>
-        <sphereGeometry args={[200, 32, 32]} />
+      {/* Sky dome - significantly increased radius */}
+      <mesh position={[0, 0, 0]} renderOrder={-1}> {/* Centered at world origin, does not move with player */}
+        <sphereGeometry args={[1500, 32, 32]} /> {/* Increased radius from 200 to 1500 */}
         <meshStandardMaterial 
           color={SKY_THEME.middle}
           side={BackSide}
@@ -208,4 +208,4 @@ export const Sky: React.FC = () => {
       ))}
     </group>
   );
-}; 
+};
